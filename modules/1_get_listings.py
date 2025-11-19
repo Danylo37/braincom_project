@@ -5,6 +5,14 @@ from parser_app.models import Product
 import requests
 from bs4 import BeautifulSoup
 from collections.abc import Callable
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 
 def safe(find_func: Callable) -> str | None:
@@ -51,8 +59,10 @@ def fetch_page(url: str) -> BeautifulSoup:
         BeautifulSoup object containing parsed HTML.
     """
 
+    logging.info(f"Fetching page from URL: {url}")
     r = requests.get(url)
     r.raise_for_status()
+    logging.info("Page fetched successfully")
     return BeautifulSoup(r.text, 'html.parser')
 
 
@@ -66,17 +76,19 @@ def extract_basic_info(soup: BeautifulSoup) -> dict:
         Dictionary with basic product information.
     """
 
+    logging.info("Extracting basic product information")
     regular_price = safe(lambda: soup.find('div', class_='price-wrapper').find('span'))
     discount_price = safe(lambda: soup.find('span', class_='red-price'))
 
-
-    return {
+    basic_info = {
         'title': safe(lambda: soup.find('h1', class_='main-title')),
         'regular_price': regular_price.replace(' ', '') if regular_price else None,
         'discount_price': discount_price.replace(' ', '') if discount_price else None,
         'product_code': safe(lambda: soup.find('span', class_='br-pr-code-val')),
         'review_count': safe(lambda: soup.find('a', class_='scroll-to-element reviews-count').find('span')),
     }
+    logging.info(f"Basic info extracted: title='{basic_info['title']}', product_code={basic_info['product_code']}")
+    return basic_info
 
 
 def extract_product_details(soup: BeautifulSoup) -> dict:
@@ -89,6 +101,7 @@ def extract_product_details(soup: BeautifulSoup) -> dict:
         Dictionary with product details.
     """
 
+    logging.info("Extracting product details")
     details = {'vendor': get_by_label(soup, 'Виробник'),
                'color': get_by_label(soup, 'Колір'),
                'memory_volume': get_by_label(soup, 'Вбудована пам\'ять'),
@@ -96,6 +109,7 @@ def extract_product_details(soup: BeautifulSoup) -> dict:
                'screen_diagonal': get_by_label(soup, 'Діагональ екрану'),
                'screen_resolution': get_by_label(soup, 'Роздільна здатність екрану')}
 
+    logging.info(f"Product details extracted: vendor={details['vendor']}, series={details['series']}")
     return details
 
 
@@ -109,6 +123,7 @@ def extract_photos(soup: BeautifulSoup) -> list:
         List of photo URLs.
     """
 
+    logging.info("Extracting product photos")
     photos = []
 
     img_tags = soup.find_all('img', class_='br-main-img')
@@ -117,6 +132,7 @@ def extract_photos(soup: BeautifulSoup) -> list:
         if img_url:
             photos.append(img_url)
 
+    logging.info(f"Extracted {len(photos)} photos")
     return photos
 
 
@@ -130,6 +146,7 @@ def extract_specifications(soup: BeautifulSoup) -> dict:
         Dictionary with product specifications.
     """
 
+    logging.info("Extracting product specifications")
     specifications = {}
 
     categories = soup.find_all('div', class_='br-pr-chr-item')
@@ -148,6 +165,7 @@ def extract_specifications(soup: BeautifulSoup) -> dict:
                 label = spans[0].text.strip()
                 specifications[label] = None
 
+    logging.info(f"Extracted {len(specifications)} specifications")
     return specifications
 
 
@@ -161,6 +179,7 @@ def parse(url: str) -> dict:
         Dictionary containing all parsed product information.
     """
 
+    logging.info("Starting product parsing")
     soup = fetch_page(url)
 
     product = {}
@@ -169,6 +188,7 @@ def parse(url: str) -> dict:
     product['photos'] = extract_photos(soup)
     product['specifications'] = extract_specifications(soup)
 
+    logging.info("Product parsing completed successfully")
     return product
 
 
@@ -180,7 +200,8 @@ def save_product(link: str, data: dict) -> None:
         data: Dictionary containing product information to save.
     """
 
-    Product.objects.update_or_create(
+    logging.info(f"Saving product to database: {data.get('title', 'Unknown')}")
+    product, created = Product.objects.update_or_create(
         link=link,
         defaults={
             'title': data['title'],
@@ -198,6 +219,10 @@ def save_product(link: str, data: dict) -> None:
             'specifications': data['specifications'],
         }
     )
+    if created:
+        logging.info(f"Product created in database with ID: {product.id}")
+    else:
+        logging.info(f"Product updated in database with ID: {product.id}")
 
 
 def main() -> None:
@@ -207,10 +232,18 @@ def main() -> None:
     parses the product data, and saves it to the database.
     """
 
+    logging.info("SCRIPT STARTED: Product parser")
+
     url = 'https://brain.com.ua/ukr/Mobilniy_telefon_Apple_iPhone_16_Pro_Max_256GB_Black_Titanium-p1145443.html'
 
-    data = parse(url)
-    save_product(url, data)
+    try:
+        data = parse(url)
+        save_product(url, data)
+        logging.info("SCRIPT COMPLETED SUCCESSFULLY")
+    except Exception as e:
+        logging.error(f"Script failed with error: {e}")
+        logging.error("SCRIPT TERMINATED WITH ERRORS")
+        raise
 
 
 if __name__ == '__main__':
