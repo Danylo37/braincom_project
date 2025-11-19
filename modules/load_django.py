@@ -1,6 +1,4 @@
-"""
-This module sets up the Django environment for use in standalone scripts.
-"""
+"""This module sets up the Django environment for use in standalone scripts."""
 
 import os
 import sys
