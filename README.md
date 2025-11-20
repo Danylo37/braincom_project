@@ -2,7 +2,15 @@
 
 ## Project Setup
 
-### 1. Environment Configuration
+### 1. Install Dependencies
+
+Before starting the project, install all required dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Environment Configuration
 
 All project settings are stored in the `.env` file. This file is used by both Django (settings.py) and Docker Compose.
 
@@ -12,7 +20,7 @@ Copy the `.env.example` file to `.env` and edit it:
 cp .env.example .env
 ```
 
-### 2. Environment Variables
+### 3. Environment Variables
 
 #### Django Settings:
 - `SECRET_KEY` - Django secret key (must be changed in production)
@@ -26,7 +34,7 @@ cp .env.example .env
 - `DB_HOST` - database host (localhost for local development)
 - `DB_PORT` - PostgreSQL port (default 5432)
 
-### 3. Running the Project
+### 4. Running the Project
 
 #### Start the database via Docker:
 ```bash
@@ -63,4 +71,36 @@ All configuration data is centralized in the `.env` file:
 - **settings.py** - uses variables from `.env` via python-dotenv to configure Django
 
 This ensures a single source of configuration for the entire project.
+
+## Database Management
+
+### Clear the Database
+
+To completely clear the database and reset the schema:
+
+```bash
+docker exec -it braincom_postgres psql -U braincom_user -d braincom_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO braincom_user; GRANT ALL ON SCHEMA public TO public;"
+```
+
+After clearing the database, don't forget to run migrations again:
+
+```bash
+cd braincom_project
+python manage.py migrate
+```
+
+## Data Export
+
+### Export Products to CSV
+
+To export all products from the database to a CSV file:
+
+```bash
+docker exec -i braincom_postgres psql -U braincom_user -d braincom_db -c "\COPY parser_app_product TO '/tmp/products.csv' CSV HEADER"
+mkdir ./results
+docker cp braincom_postgres:/tmp/products.csv ./results/products.csv
+docker exec braincom_postgres rm /tmp/products.csv
+```
+
+This will create a `products.csv` file in the `results/` directory with all product data.
 
