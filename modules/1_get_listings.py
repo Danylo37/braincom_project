@@ -127,7 +127,9 @@ def extract_product_details(driver: webdriver.Chrome) -> dict:
 
     logging.info("Extracting product details")
 
-    all_specs = driver.find_element(By.XPATH, "//div[@id='br-pr-7']//button[@class='br-prs-button']")
+    all_specs = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//div[@id='br-pr-7']//button[@class='br-prs-button']"))
+    )
 
     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", all_specs)
 
@@ -243,14 +245,16 @@ def search_product(driver: webdriver.Chrome, search_query: str, url: str, timeou
     simulate_user()
 
     logging.info("Clicking search button")
-    search_button = driver.find_element(By.XPATH, f"{header_bottom_div}//input[@type='submit' and contains(@class, 'search-button-first-form')]")
+    search_button = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.XPATH, f"{header_bottom_div}//input[@type='submit' and contains(@class, 'search-button-first-form')]"))
+    )
     search_button.submit()
 
     simulate_user()
 
     logging.info("Clicking on the first search result")
     first_result = WebDriverWait(driver, timeout).until(
-        EC.presence_of_element_located((By.XPATH, "//div[@class='br-pp-desc br-pp-ipd-hidden ']//a"))
+        EC.element_to_be_clickable((By.XPATH, "(//div[@class='br-pp-desc br-pp-ipd-hidden ']//a)[1]"))
     )
     product_url = first_result.get_attribute('href')
     logging.info(f"First result URL: {product_url}")
