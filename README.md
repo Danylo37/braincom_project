@@ -10,6 +10,12 @@ Before starting the project, install all required dependencies:
 pip install -r requirements.txt
 ```
 
+After installing Python dependencies, you need to install the Chromium browser for Playwright:
+
+```bash
+playwright install chromium
+```
+
 ### 2. Environment Configuration
 
 All project settings are stored in the `.env` file. This file is used by both Django (settings.py) and Docker Compose.
