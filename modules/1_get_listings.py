@@ -86,7 +86,7 @@ def extract_basic_info(soup: BeautifulSoup) -> dict:
         'product_code': safe(lambda: soup.find('span', class_='br-pr-code-val')),
         'review_count': safe(lambda: soup.find('a', class_='scroll-to-element reviews-count').find('span')),
     }
-    logging.info(f"Basic info extracted: title='{basic_info['title']}', product_code={basic_info['product_code']}")
+    logging.info("Basic info extracted")
     return basic_info
 
 
@@ -108,7 +108,7 @@ def extract_product_details(soup: BeautifulSoup) -> dict:
                'screen_diagonal': get_by_label(soup, 'Діагональ екрану'),
                'screen_resolution': get_by_label(soup, 'Роздільна здатність екрану')}
 
-    logging.info(f"Product details extracted: vendor={details['vendor']}, series={details['series']}")
+    logging.info("Product details extracted")
     return details
 
 
