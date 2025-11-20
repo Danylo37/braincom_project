@@ -234,10 +234,8 @@ def search_product(driver: webdriver.Chrome, search_query: str, url: str, timeou
 
     logging.info(f"Entering search query: {search_query}")
 
-    header_bottom_div = "//div[@class='header-bottom']"
-
     search_input = WebDriverWait(driver, timeout).until(
-        EC.presence_of_element_located((By.XPATH, f"{header_bottom_div}//input[@class='quick-search-input']"))
+        EC.presence_of_element_located((By.XPATH, "//div[@class='header-bottom']//input[@class='quick-search-input']"))
     )
     search_input.clear()
     search_input.send_keys(search_query)
@@ -246,7 +244,7 @@ def search_product(driver: webdriver.Chrome, search_query: str, url: str, timeou
 
     logging.info("Clicking search button")
     search_button = WebDriverWait(driver, timeout).until(
-        EC.element_to_be_clickable((By.XPATH, f"{header_bottom_div}//input[@type='submit' and contains(@class, 'search-button-first-form')]"))
+        EC.element_to_be_clickable((By.XPATH, "//input[@type='submit' and @class='qsr-submit']"))
     )
     search_button.submit()
 
@@ -254,7 +252,7 @@ def search_product(driver: webdriver.Chrome, search_query: str, url: str, timeou
 
     logging.info("Clicking on the first search result")
     first_result = WebDriverWait(driver, timeout).until(
-        EC.element_to_be_clickable((By.XPATH, "(//div[@class='br-pp-desc br-pp-ipd-hidden ']//a)[1]"))
+        EC.element_to_be_clickable((By.XPATH, "(//div[@class='row br-row br-row-main br-row-main-s']//div[@class='br-pp-desc br-pp-ipd-hidden ']//a)[1]"))
     )
     product_url = first_result.get_attribute('href')
     logging.info(f"First result URL: {product_url}")
