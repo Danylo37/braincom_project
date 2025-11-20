@@ -327,13 +327,13 @@ def main() -> None:
 
     logging.info("SCRIPT STARTED: Product parser with Selenium")
 
-    driver = webdriver.Chrome()
-    driver.maximize_window()
-
     search_query = "Apple iPhone 15 128GB Black"
     url = "https://brain.com.ua/"
 
     try:
+        driver = webdriver.Chrome()
+        driver.maximize_window()
+
         product_url = search_product(driver, search_query, url)
 
         if product_url:
